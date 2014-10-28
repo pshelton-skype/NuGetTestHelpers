@@ -21,7 +21,7 @@ namespace NuGetPackageVerifiers
         /// </summary>
         /// <param name="packageFullPath"></param>
         /// <param name="solutionPath"></param>
-        public bool? Validate(string packageFullPath, VsProjectManager dteHelper)
+        public bool? Validate(string packageFullPath, VsProjectManager dteHelper, params object[] options)
         {
             ZipPackage zipPackage = new ZipPackage(packageFullPath);
             string solutionPath = dteHelper.SolutionPath;

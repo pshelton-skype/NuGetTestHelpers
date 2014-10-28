@@ -15,11 +15,10 @@ namespace NuGetTestHelper
         /// This method would validate the specific aspect of package install/uninstall - say adding references, contents, opening readme.txt and so on ...
         /// "NugetValidationException should be thrown by this method when the validation fails.
         /// </summary>
-        bool? Validate(string packageFullPath, VsProjectManager dteHelper);
+        bool? Validate(string packageFullPath, VsProjectManager dteHelper, params object[] options);
         bool? HasSuceeded { get; set; }
         string Output { get;  }
         string Error { get;  }
-
     }
 
     public interface IPackageVerifierMetadata
@@ -27,5 +26,4 @@ namespace NuGetTestHelper
         string Name { get;}
         string Action { get;}
     }
-
 }

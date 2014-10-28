@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using EnvDTE;
 using EnvDTE80;
+using EnvDTE90;
 using System.IO;
 using VSLangProj;
 using System.Runtime.Versioning;
@@ -23,15 +24,17 @@ namespace NuGetTestHelper
     public class VsProjectManager : IDisposable
     {
         #region PublicMethods
-       /// <summary>
-       /// Launches VS with the specific version and SKU.
-       /// </summary>
-       /// <param name="VsVersion"></param>
-       /// <param name="VsSKU"></param>
+        /// <summary>
+        /// Launches VS with the specific version and SKU.
+        /// </summary>
+        /// <param name="VsVersion"></param>
+        /// <param name="VsSKU"></param>
         public void LaunchVS(VSVersion VsVersion, VSSKU VsSKU)
         {
             if (!IsSkuInstalled(VsVersion, vsSKU))
-                throw new Exception(string.Format("The SKU with version {0} and SKU name {1} is not present in the machine. Please specify a different SKU or install it." ,VsVersion, vsSKU));
+            {
+                throw new Exception(string.Format("The SKU with version {0} and SKU name {1} is not present on the machine. Please specify a different SKU or install it.", VsVersion, vsSKU));
+            }
             this.vsVersion = VsVersion;
             this.vsSKU = VsSKU;
             LaunchVSInternal();
@@ -42,7 +45,6 @@ namespace NuGetTestHelper
         /// </summary>
         public void CloseAllSkus()
         {
-          
             try
             {
                 System.Diagnostics.Process[] allProcesses = System.Diagnostics.Process.GetProcesses();
@@ -50,13 +52,13 @@ namespace NuGetTestHelper
                 {
                     if (proc.ProcessName.Contains("devenv") || proc.ProcessName.Contains("VWDExpress") || proc.ProcessName.Contains("VSWinExpress"))
                     {
-                       proc.Kill();
+                        proc.Kill();
                     }
                 }
             }
             catch (Exception e)
             {
-              //  Console.WriteLine("Exception while killing devenv.exe", e.Message);
+                //  Console.WriteLine("Exception while killing devenv.exe", e.Message);
             }
         }
 
@@ -75,26 +77,30 @@ namespace NuGetTestHelper
         /// <param name="projectTemplate"></param>
         /// <param name="framework"></param>
         /// <param name="solnPath"></param>
-        public void CreateProject(string projectTemplateName,string projectLanguage,string projectTargetFramework, string projectName, string solnFullPath=null)
-        {            
+        public void CreateProject(string projectTemplateName, string projectLanguage, string projectTargetFramework, string projectName, string solnFullPath = null)
+        {
             try
             {
                 if (solnFullPath == null)
+                {
                     solnFullPath = Path.Combine(Environment.CurrentDirectory, "Solution" + DateTime.Now.Ticks.ToString());
+                }
                 this.SolutionPath = solnFullPath;
-                Solution2 soln = dteObject.Solution as Solution2;                                
-               //setting the project location is required due to Nuget bug # 2917 : http://nuget.codeplex.com/workitem/2917
+                Solution2 soln = dteObject.Solution as Solution2;
+
+                // Setting the project location is required due to Nuget bug # 2917 : http://nuget.codeplex.com/workitem/2917
                 Properties prop = dteObject.Properties["Environment", "ProjectsAndSolution"];
                 prop.Item("ProjectsLocation").Value = Path.GetFullPath(Path.GetDirectoryName(solnFullPath));
-                string templatepath = soln.GetProjectTemplate(projectTemplateName, projectLanguage);
-                soln.AddFromTemplate(templatepath + projectTargetFramework, solnFullPath, projectName);              
+
+                string templatePath = soln.GetProjectTemplate(projectTemplateName, projectLanguage);
+                soln.AddFromTemplate(templatePath + projectTargetFramework, solnFullPath, projectName);
             }
             catch (Exception e)
-            {             
+            {
                 throw new Exception(string.Format("Unable to create project with template {0}. Make sure that the template is valid and the template file exists. Exception message : {1}", projectTemplateName.ToString(), e.Message));
-            }           
+            }
         }
-
+        
         /// <summary>
         /// Creates a new project based on the given full path to the project template.
         /// </summary>
@@ -106,12 +112,16 @@ namespace NuGetTestHelper
             try
             {
                 if (solnFullPath == null)
+                {
                     solnFullPath = Path.Combine(Environment.CurrentDirectory, "Solution" + DateTime.Now.Ticks.ToString());
+                }
                 this.SolutionPath = solnFullPath;
-                Solution2 soln = dteObject.Solution as Solution2;               
-                //setting the project location is required due to Nuget bug # 2917 : http://nuget.codeplex.com/workitem/2917
+                Solution2 soln = dteObject.Solution as Solution2;
+
+                // Setting the project location is required due to Nuget bug # 2917 : http://nuget.codeplex.com/workitem/2917
                 Properties prop = dteObject.Properties["Environment", "ProjectsAndSolution"];
                 prop.Item("ProjectsLocation").Value = Path.GetFullPath(Path.GetDirectoryName(solnFullPath));
+
                 soln.AddFromTemplate(projectTemplateFullPath + projectTargetFramework, solnFullPath, projectName);
             }
             catch (Exception e)
@@ -120,6 +130,78 @@ namespace NuGetTestHelper
             }
         }
 
+        /// <summary>
+        /// Creates a new Azure cloud service project (.ccproj) based on the given template name, language, framework, and Azure tools version
+        /// </summary>
+        /// <param name="projectTemplate"></param>
+        /// <param name="framework"></param>
+        /// <param name="solnPath"></param>
+        public void CreateAzureCloudServiceProject(string projectTemplateName, string projectLanguage, string projectTargetFramework, string projectAzureToolsVersion, string projectName, string solutionFullPath = null)
+        {
+            try
+            {
+                if (solutionFullPath == null)
+                {
+                    solutionFullPath = Path.Combine(Environment.CurrentDirectory, "Solution" + DateTime.Now.Ticks.ToString());
+                }
+                this.SolutionPath = solutionFullPath;
+                Solution2 soln = dteObject.Solution as Solution2;
+
+                // Setting the project location is required due to Nuget bug # 2917 : http://nuget.codeplex.com/workitem/2917
+                Properties prop = dteObject.Properties["Environment", "ProjectsAndSolution"];
+                prop.Item("ProjectsLocation").Value = Path.GetFullPath(Path.GetDirectoryName(solutionFullPath));
+
+                string templatePath = soln.GetProjectTemplate(projectTemplateName, projectLanguage);
+                soln.AddFromTemplate(templatePath + projectTargetFramework + projectAzureToolsVersion, solutionFullPath, projectName);
+            }
+            catch (Exception e)
+            {
+                throw new Exception(string.Format("Unable to create project with template {0}. Make sure that the template is valid and the template file exists. Exception message : {1}", projectTemplateName.ToString(), e.Message));
+            }
+        }
+
+        public void CreateAzureCloudServiceWorkerRole(string projectItemTemplateName, string projectLanguage, string projectTargetFramework, string projectName, Project cloudServiceProject, string solnFullPath = null)
+        {
+            try
+            {              
+                Solution3 soln = dteObject.Solution as Solution3;
+
+                Templates templates = soln.GetProjectItemTemplates(projectItemTemplateName, "");
+                string templatePath = String.Empty;
+                foreach (Template t in templates)
+                {
+                    if (t.Name.Equals("Worker Role"))
+                    {
+                        templatePath = t.FilePath;
+                        // CSharp happens to be after VB and F#, so don't break here 
+                    }
+                }
+
+                if (!String.IsNullOrEmpty(templatePath) && cloudServiceProject != null)
+                {
+                    cloudServiceProject.ProjectItems.AddFromTemplate(templatePath + projectTargetFramework, "WorkerRole");
+                }
+            }
+            catch (Exception e)
+            {
+                throw new Exception(string.Format("Unable to create project with template {0}. Make sure that the template is valid and the template file exists. Exception message : {1}", projectItemTemplateName.ToString(), e.Message));
+            }
+        }
+
+        public Project FindFirstCloudServiceProject()
+        {
+            const string CloudProjectKindGuid = "{cc5fd16D-436d-48ad-a40c-5a424c6e3e79}";
+
+            foreach (Project project in DteObject.Solution.Projects)
+            {
+                if (string.Equals(project.Kind, CloudProjectKindGuid, StringComparison.OrdinalIgnoreCase))
+                {
+                    return project;
+                }
+            }
+
+            return null;
+        }
 
         /// <summary>
         /// Opens an existing solution.
@@ -128,8 +210,9 @@ namespace NuGetTestHelper
         public void OpenExistingSolution(string solutionFullPath)
         {
             if (!File.Exists(solutionFullPath))
+            {
                 throw new Exception(string.Format("The specified solution {0} doesn't exist", solutionFullPath));
-
+            }
             this.SolutionPath = Path.GetFullPath(Path.GetDirectoryName(solutionFullPath));
             try
             {
@@ -139,15 +222,15 @@ namespace NuGetTestHelper
             {
                 throw new Exception(string.Format("Unable to open solution : {0}. Exception message :{1}", solutionFullPath, e.Message));
             }
-        }              
+        }
 
         /// <summary>
         /// Returns the list of reference assemblies present in the current active project.
         /// </summary>
         /// <returns></returns>
-        public  Dictionary<string,string> GetReferences(string projectName=null)
+        public Dictionary<string, string> GetReferences(string projectName = null)
         {
-            Dictionary<string,string> referenceNames = new Dictionary<string,string>();      
+            Dictionary<string, string> referenceNames = new Dictionary<string, string>();
             Project currentProject = null;
             //if project name is not specified get the current active project.
             if (string.IsNullOrEmpty(projectName))
@@ -159,15 +242,17 @@ namespace NuGetTestHelper
                 currentProject = GetProjectByName(projectName);
             }
             if (currentProject == null)
+            {
                 return null;
-            currentProject.Save();
+            }
 
             VSProject vsProj = currentProject.Object as VSProject;
             if (vsProj == null)
+            {
                 return null;
-
+            }
             foreach (Reference reference in vsProj.References)
-            {               
+            {
                 referenceNames.Add(reference.Name, reference.Version);
             }
             return referenceNames;
@@ -177,8 +262,8 @@ namespace NuGetTestHelper
         /// Returns the list of reference assemblies present in the current active project.
         /// </summary>
         /// <returns></returns>
-        public Reference GetReferenceByName(string referenceName,string projectName=null)
-        {           
+        public Reference GetReferenceByName(string referenceName, string projectName = null)
+        {
             Project currentProject = null;
             //if project name is not specified get the current active project.
             if (string.IsNullOrEmpty(projectName))
@@ -190,18 +275,18 @@ namespace NuGetTestHelper
                 currentProject = GetProjectByName(projectName);
             }
             if (currentProject == null)
+            {
                 return null;
+            }
             currentProject.Save();
-
-            //var vsRef = currentProject.Object.References.Item(referenceName);
-            //return vsRef;
-            //Console.WriteLine("Embeded interop : " + vsRef.EmbedInteropTypes);
-
+            
             VSProject vsProj = currentProject.Object as VSProject;
             if (vsProj == null)
+            {
                 return null;
-            return vsProj.References.Find(referenceName);        
-        }       
+            }
+            return vsProj.References.Find(referenceName);
+        }
 
         /// <summary>
         /// Returns the .net framework of the current active project of the solution.
@@ -219,7 +304,7 @@ namespace NuGetTestHelper
         public string GetActiveWindowName()
         {
             return dteObject.ActiveWindow.Caption.ToString();
-        }      
+        }
 
         /// <summary>
         /// Builds the solution and returns the build status.
@@ -231,7 +316,9 @@ namespace NuGetTestHelper
             dteObject.Solution.SolutionBuild.Build(true);
             //Make sure that the build completes.
             while (dteObject.Solution.SolutionBuild.BuildState.Equals(vsBuildState.vsBuildStateInProgress))
+            {
                 System.Threading.Thread.Sleep(1 * 1000);
+            }
             buildOutput = GetTextFromOutputPane("Build");
             return dteObject.Solution.SolutionBuild.LastBuildInfo;
         }
@@ -242,7 +329,9 @@ namespace NuGetTestHelper
         public void CloseSolution()
         {
             if (dteObject != null)
-            dteObject.ExecuteCommand("File.Exit");
+            {
+                dteObject.ExecuteCommand("File.Exit");
+            }
         }
 
         /// <summary>
@@ -250,15 +339,17 @@ namespace NuGetTestHelper
         /// </summary>
         public void Dispose()
         {
-            if(dteObject != null)
-             dteObject.Quit();            
+            if (dteObject != null)
+            {
+                dteObject.Quit();
+            }
         }
 
         #endregion PublicMethods
 
-        #region PrivateMethods    
- 
-        
+        #region PrivateMethods
+
+
         [DllImport("User32.dll")]
         private static extern Int32 SetForegroundWindow(int hWnd);
 
@@ -271,13 +362,18 @@ namespace NuGetTestHelper
             Type visualStudioType = Type.GetTypeFromProgID(GetProgIDForVSVersion(this.vsVersion, this.vsSKU));
             dteObject = Activator.CreateInstance(visualStudioType) as DTE2;
             System.Threading.Thread.Sleep(10 * 1000);
+
+            // Register the IOleMessageFilter to handle any threading errors. See http://msdn.microsoft.com/en-us/library/ms228772.aspx.
+            MessageFilter.Register();
+            
+            // Display the Visual Studio IDE.
             dteObject.MainWindow.Visible = true;
             System.Threading.Thread.Sleep(10 * 1000);
             dteObject.MainWindow.Activate();
             dteObject.MainWindow.WindowState = vsWindowState.vsWindowStateMaximize;
             //Invoke SetForeGround to bring the VS window on top. Though it is not required, just setting it as foreground to be on safer side.
             SetForegroundWindow(FindWindow(null, dteObject.MainWindow.Caption));
-        }    
+        }
 
         /// <summary>
         /// Installs the given package on the current project.
@@ -285,7 +381,7 @@ namespace NuGetTestHelper
         /// <param name="packageId"></param>
         /// <param name="version"></param>
         /// <param name="path"></param>
-        internal bool InstallPackage(string packageId, string version, int timeOut = 10 * 60 * 1000, bool update=false)
+        internal bool InstallPackage(string packageId, string version, int timeOut = 10 * 60 * 1000, bool update = false)
         {
             //Add enough sleeps to let the solution and package manager console to initialize before installing the package.
             System.Threading.Thread.Sleep(10 * 1000);
@@ -293,13 +389,13 @@ namespace NuGetTestHelper
             System.Threading.Thread.Sleep(10 * 1000);
             dteObject.ActiveWindow.Activate();
             //clear existing content from the console.
-            SafeExecuteCommand("View.PackageManagerConsole clear-Host");           
+            SafeExecuteCommand("View.PackageManagerConsole clear-Host");
             //Invoke the install script. Enclosing quotes are required in case if the path contains spaces.
             string installCommand = @"& " + @"""" + Path.Combine(Environment.CurrentDirectory, @"Install.ps1") + @"""" + @" " + @"""" + packageId + @"""" + " " + @"""" + update.ToString() + @"""";// +" -Version " + version + " -pre";
             SafeExecuteCommand("View.PackageManagerConsole " + installCommand);
             //Wait till package installation completes or the timeout exceeds.
             int waitTime = 0;
-            while ( !File.Exists(GetResultFile(packageId)) && !File.Exists(GetResultFile(packageId,"Fail.txt")) && (waitTime < timeOut) )
+            while (!File.Exists(GetResultFile(packageId)) && !File.Exists(GetResultFile(packageId, "Fail.txt")) && (waitTime < timeOut))
             {
                 //Check for the results file which the install package script would create on success or failure.
                 //This is required as DTE.ExecuteCommand is asynchronous and there is no way to raise an event when the operation completes.
@@ -311,8 +407,7 @@ namespace NuGetTestHelper
             SafeExecuteCommand("File.SaveAll");
             return IsPackageInstalled(packageId);
         }
-
-
+        
         private bool IsPackageInstalled(string packageId)
         {
             //Checks the pass.txt file that would have been created by the installpackage powershell script.
@@ -326,7 +421,6 @@ namespace NuGetTestHelper
             }
         }
 
-
         private string GetResultFile(string packageId, string resultFile = "Pass.txt")
         {
             return Path.Combine(this.SolutionPath, packageId + resultFile);
@@ -339,10 +433,8 @@ namespace NuGetTestHelper
             {
                 return activeSolutionProjects.GetValue(0) as Project;
             }
-            else
-            {
-                return null;
-            }
+            
+            return null;
         }
 
         private Project GetProjectByName(string projectName)
@@ -356,6 +448,7 @@ namespace NuGetTestHelper
                     return project;
                 }
             }
+
             return null;
         }
 
@@ -372,7 +465,6 @@ namespace NuGetTestHelper
             outputPane.TextDocument.Selection.StartOfDocument(false);
             outputPane.TextDocument.Selection.EndOfDocument(true);
             return dteObject.ToolWindows.OutputWindow.ActivePane.TextDocument.Selection.Text;
-
         }
 
         /// <summary>
@@ -399,19 +491,19 @@ namespace NuGetTestHelper
                 }
                 catch (Exception e)
                 {
-                   // Console.WriteLine(e.Message);
+                    // Console.WriteLine(e.Message);
                     System.Threading.Thread.Sleep(5 * 1000);
                 }
             }
         }
 
-        private string GetProgIDForVSVersion(VSVersion vsVersion,VSSKU vsSKU)
+        private string GetProgIDForVSVersion(VSVersion vsVersion, VSSKU vsSKU)
         {
             string version = GetVersionString(vsVersion);
             string Sku = GetSkuString(vsSKU);
 
             return Sku + ".DTE." + version;
-           
+
         }
 
         private string GetSkuString(VSSKU vsSKU)
@@ -444,17 +536,24 @@ namespace NuGetTestHelper
                 default:
                     return VS2012VersionString;
             }
-        }       
-        
+        }
+
         private bool IsSkuInstalled(VSVersion version, VSSKU sku)
         {
-            string[] subkeys = Registry.LocalMachine.OpenSubKey(GetSkuInstallRegKeyPath(version,sku)).GetSubKeyNames();
-            return (subkeys != null && subkeys.Length > 0);           
+            try
+            {
+                string[] subkeys = Registry.LocalMachine.OpenSubKey(GetSkuInstallRegKeyPath(version, sku)).GetSubKeyNames();
+                return (subkeys != null && subkeys.Length > 0);
+            }
+            catch (NullReferenceException e)
+            {
+                return false;
+            }
         }
 
         private string GetSkuInstallRegKeyPath(VSVersion version, VSSKU sku)
         {
-          return Path.Combine( @"Software\Microsoft", GetSkuString(sku) , GetVersionString(version), @"Setup\VS");
+            return Path.Combine(@"Software\Microsoft", GetSkuString(sku), GetVersionString(version), @"Setup\VS");
         }
 
         private void GetDefaultSKU(out VSVersion defaultVersion, out VSSKU defaultSku)
@@ -463,10 +562,10 @@ namespace NuGetTestHelper
             {
                 foreach (var sku in Enum.GetValues(typeof(VSSKU)))
                 {
-                    if(IsSkuInstalled( (VSVersion)version, (VSSKU)sku))
+                    if (IsSkuInstalled((VSVersion)version, (VSSKU)sku))
                     {
-                        defaultVersion = (VSVersion) version;
-                        defaultSku =  (VSSKU) sku;
+                        defaultVersion = (VSVersion)version;
+                        defaultSku = (VSSKU)sku;
                         return;
                     }
                 }
@@ -478,9 +577,9 @@ namespace NuGetTestHelper
         #endregion PrivateMethods
 
         #region PrivateVariables
-             
+
         #region VSSKUs
-        private const string VSUSkUString= "VisualStudio";
+        private const string VSUSkUString = "VisualStudio";
         private const string WDExpressSkUString = "wdexpress";
         private const string VWDExpressSkUString = "vwdexpress";
         private const string Win8ExpressSkUString = "vswinexpress";
@@ -488,7 +587,7 @@ namespace NuGetTestHelper
         private const string VS2012VersionString = "11.0";
         private const string VS2010VersionString = "10.0";
         private const string DTEString = "DTE";
-    
+
         #endregion VSSKUs
 
         private VSVersion vsVersion = VSVersion.VS2012;
@@ -505,7 +604,7 @@ namespace NuGetTestHelper
         public string SolutionPath
         {
             get { return solutionPath; }
-           private set { solutionPath = value; }
+            private set { solutionPath = value; }
         }
 
         #endregion PrivateVariables
@@ -522,7 +621,7 @@ namespace NuGetTestHelper
         VS2013
     }
 
-     /// <summary>
+    /// <summary>
     /// Represents the VS SKU.
     /// </summary>
     public enum VSSKU
@@ -532,5 +631,77 @@ namespace NuGetTestHelper
         WDExpress,
         Win8Express
     }
- 		
+
+    public class MessageFilter : IOleMessageFilter
+    {
+        // Class containing the IOleMessageFilter thread error-handling functions.
+        // See http://msdn.microsoft.com/en-us/library/ms228772.aspx for details.
+        
+        public static void Register()
+        {
+            IOleMessageFilter newFilter = new MessageFilter(); 
+            IOleMessageFilter oldFilter = null; 
+            CoRegisterMessageFilter(newFilter, out oldFilter);
+        }
+
+        public static void Revoke()
+        {
+            IOleMessageFilter oldFilter = null; 
+            CoRegisterMessageFilter(null, out oldFilter);
+        }
+
+        // Handle incoming thread requests.
+        int IOleMessageFilter.HandleInComingCall(int dwCallType, System.IntPtr hTaskCaller, int dwTickCount, System.IntPtr lpInterfaceInfo) 
+        {
+            // Return the flag SERVERCALL_ISHANDLED.
+            return 0;
+        }
+
+        // Thread call was rejected, so try again.
+        int IOleMessageFilter.RetryRejectedCall(System.IntPtr hTaskCallee, int dwTickCount, int dwRejectType)
+        {
+            if (dwRejectType == 2) // SERVERCALL_RETRYLATER
+            {
+                // Retry the thread call immediately if return >= 0 && return < 100.
+                return 99;
+            }
+
+            // Too busy; cancel call.
+            return -1;
+        }
+
+        int IOleMessageFilter.MessagePending(System.IntPtr hTaskCallee, int dwTickCount, int dwPendingType)
+        {
+            // Return the flag PENDINGMSG_WAITDEFPROCESS.
+            return 2; 
+        }
+
+        // Implement the IOleMessageFilter interface.
+        [DllImport("Ole32.dll")]
+        private static extern int CoRegisterMessageFilter(IOleMessageFilter newFilter, out IOleMessageFilter oldFilter);
+    }
+
+    [ComImport(), Guid("00000016-0000-0000-C000-000000000046"), 
+    InterfaceTypeAttribute(ComInterfaceType.InterfaceIsIUnknown)]
+    interface IOleMessageFilter 
+    {
+        [PreserveSig]
+        int HandleInComingCall( 
+            int dwCallType, 
+            IntPtr hTaskCaller, 
+            int dwTickCount, 
+            IntPtr lpInterfaceInfo);
+
+        [PreserveSig]
+        int RetryRejectedCall( 
+            IntPtr hTaskCallee, 
+            int dwTickCount,
+            int dwRejectType);
+
+        [PreserveSig]
+        int MessagePending( 
+            IntPtr hTaskCallee, 
+            int dwTickCount,
+            int dwPendingType);
+    }
 }

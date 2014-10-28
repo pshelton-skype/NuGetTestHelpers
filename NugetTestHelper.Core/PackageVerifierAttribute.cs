@@ -29,8 +29,6 @@ namespace NuGetTestHelper
         {
             get;
             private set;
-        }
-
-      
+        }     
     }
 }

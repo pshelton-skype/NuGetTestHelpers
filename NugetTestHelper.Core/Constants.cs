@@ -19,7 +19,6 @@ namespace NuGetTestHelper
 
     public static class ProjectTemplates
     {
-        #region StandardTemplateNames
         public static string MVC4RazorWebAppCsharp = "MvcWebApplicationProjectTemplate.11.cshtml.vstemplate";
         public static string MVC4CshtmlWebAppTemplateName = "MvcFacebookApplicationProjectTemplate.11.cshtml.vstemplate";
         public static string ConsoleAppCSharp = "csConsoleApplication.vstemplate";
@@ -28,17 +27,21 @@ namespace NuGetTestHelper
         public static string Windows8CSharp = "Microsoft.CS.WinRT.ClassLibrary";
         public static string SilverLight = "SilverlightClassLibrary.vstemplate";
         public static string WindowsPhone = "Discover.vstemplate";
-        #endregion StandardTemplateNames
+        public static string CloudService = "CloudService_cs.zip";
     }
 
     public static class ProjectTargetFrameworks
     {
-        #region StandardTemplateNames
-       public static string Net45 = "|$targetframeworkversion$=4.5";
-       public static string Net40 = "|$targetframeworkversion$=4.0";
-       public static string Net35 = "|$targetframeworkversion$=3.5";
-       public static string Net20 = "|$targetframeworkversion$=2.0";
-      
-        #endregion StandardTemplateNames
+        public static string Net45 = "|$TargetFrameworkVersion$=4.5";
+        public static string Net40 = "|$TargetFrameworkVersion$=4.0";
+        public static string Net35 = "|$TargetFrameworkVersion$=3.5";
+        public static string Net20 = "|$TargetFrameworkVersion$=2.0";
+    }
+
+    public static class ProjectTargetWindowsAzureTools
+    {
+        public static string Version24 = "|$TargetWindowsAzureToolsVersion$=2.4";
+        public static string Version23 = "|$TargetWindowsAzureToolsVersion$=2.3";
+        public static string Version22 = "|$TargetWindowsAzureToolsVersion$=2.2";
     }
 }

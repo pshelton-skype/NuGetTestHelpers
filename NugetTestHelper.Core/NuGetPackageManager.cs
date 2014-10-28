@@ -13,9 +13,7 @@ using System.Runtime.Versioning;
 namespace NuGetTestHelper
 {
     public class NuGetPackageManager
-    {
-        #region PublicMethods
-     
+    {     
         public bool InstallPackage(string packageId, string packageVersion,out string installationMessage,bool updateAll=false)
         {           
             PackageId = packageId;
@@ -40,11 +38,7 @@ namespace NuGetTestHelper
         {
             return NugetProcessUtility.AnalyzeNugetPackage(packageFullPath);
         }
-
-        #endregion PublicMethods
-
-        #region PrivateMethods
-
+                
         internal static NuGetPackageManager GetNuGetPackageManager(VsProjectManager projectManager)
         {
             return new NuGetPackageManager(projectManager);
@@ -62,7 +56,9 @@ namespace NuGetTestHelper
                 return false;
             }
             else
+            {
                 return true;
+            }
         }
 
         private string GetPackageInstallationOutput()
@@ -73,29 +69,22 @@ namespace NuGetTestHelper
             int indexOfInstallCommand = output.IndexOf(installCommand,StringComparison.OrdinalIgnoreCase);
 
             if (!CheckForIndexRange(indexOfInstallCommand, output))
+            {
                 return null;
+            }
 
             int endindexOfInstallCommand = output.IndexOf("PM>", indexOfInstallCommand,StringComparison.OrdinalIgnoreCase);
             if (!CheckForIndexRange(endindexOfInstallCommand, output))
+            {
                 return null;
+            }
             string installCommandOutput = output.Substring(indexOfInstallCommand, endindexOfInstallCommand - indexOfInstallCommand);
             return installCommandOutput;
-
         }
 
-        #endregion PrivateMethods
-
-        #region MemberVariables     
         private string PackageFullPath = string.Empty;
         private VsProjectManager vsProjectManager;
         private string PackageId;
-        private string PackageVersion;          
-       
-        #endregion MemeberVariables
-
-       
-
-        
-       
+        private string PackageVersion;
     }
 }

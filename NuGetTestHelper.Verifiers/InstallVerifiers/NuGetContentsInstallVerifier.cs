@@ -15,9 +15,8 @@ namespace NuGetPackageVerifiers
     [VerifierMetadata("Contents, Verifier",NuGetTestHelper.Constants.InstallAction)]
     public class NuGetContentsInstallVerifier : IPackageVerifier
     {
-        public bool? Validate(string packageFullPath, VsProjectManager dteHelper)
-        {
-         
+        public bool? Validate(string packageFullPath, VsProjectManager dteHelper, params object[] options)
+        {         
             string solutionPath = dteHelper.SolutionPath;      
             HasSuceeded = true;
             
